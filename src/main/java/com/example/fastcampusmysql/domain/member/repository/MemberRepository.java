@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -21,6 +22,16 @@ public class MemberRepository {
     final private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     final static private String TABLE ="Member";
+
+    //BeanPropertyRowMapper 사용 시 엔티티에 setter를 열어줘야함.
+    private static final RowMapper<Member> rowMapper = (ResultSet rs, int rowNum) -> Member
+            .builder()
+            .id(rs.getLong("id"))
+            .email(rs.getString("email"))
+            .nickname(rs.getString("nickname"))
+            .birthday(rs.getObject("birthday", LocalDate.class))
+            .createdAt(rs.getObject("createdAt", LocalDateTime.class))
+            .build();
 
 
     public Member save(Member member) {
@@ -67,17 +78,19 @@ public class MemberRepository {
         var param = new MapSqlParameterSource()
                 .addValue("id", id);
 
-        //BeanPropertyRowMapper 사용 시 엔티티에 setter를 열어줘야함.
-        RowMapper<Member> rowMapper = (ResultSet rs, int rowNum) -> Member
-                .builder()
-                .id(rs.getLong("id"))
-                .email(rs.getString("email"))
-                .nickname(rs.getString("nickname"))
-                .birthday(rs.getObject("birthday", LocalDate.class))
-                .createdAt(rs.getObject("createdAt", LocalDateTime.class))
-                .build();
+
         var member = namedParameterJdbcTemplate.queryForObject(sql, param, rowMapper);
         return Optional.ofNullable(member);
     }
 
+    //ids에 빈 리스트가 들어올 경우 sql 에러 발생.
+    public List<Member> findAllByIdIn(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        //반복되는 String.format 중복제거 해보기.
+        var sql = String.format("SELECT * FROM %s WHERE id IN (:ids)", TABLE);
+        var params = new MapSqlParameterSource().addValue("ids", ids);
+        return namedParameterJdbcTemplate.query(sql, params, rowMapper);
+    }
 }
