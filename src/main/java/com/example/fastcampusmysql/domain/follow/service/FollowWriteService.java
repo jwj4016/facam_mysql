@@ -15,7 +15,7 @@ public class FollowWriteService {
     final private FollowRepository followRepository;
 
     // 멤버 식별자를 파라미터로 받을경우 (param : Long fromMemberId, Long toMemberId)
-    // 식별자 검증을 위해 팔로우 서비스에서 도메인 repository나 service를 주입 받아야한다. 결합이 심해진다.
+    // 식별자 검증을 위해 팔로우 서비스에서 멤버 도메인 repository나 service를 주입 받아야한다. 결합이 심해진다.
     // MemberDto는 어디서 올까?
     // 서로 다른 도메인의 데이터 주고 받을 때, 혹은 서로 다른 도메인 간 흐름 제어를 어디서 해야하나?
     // 헥사고날 아키텍처, ddd, 레이어드 아키텍처. 경계간 통신을 위한 여러가지 이론이 있다.
