@@ -156,4 +156,42 @@ public class PostRepository {
         return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
     }
 
+    public List<Post> findAllByMemberIdsAndOrderByIdDesc(List<Long> memberIds, int size) {
+        if (memberIds.isEmpty()) {
+            return List.of();
+        }
+        var sql = String.format("""
+                SELECT *
+                  FROM %s
+                 WHERE memberId IN (:memberIds)
+              ORDER BY id DESC
+                 LIMIT :size
+                """, TABLE);
+        var params = new MapSqlParameterSource()
+                .addValue("memberIds", memberIds)
+                .addValue("size", size);
+        //커서방식에는 사용하는 키와 정렬 순서가 반드시 맞아야한다?
+        return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
+    public List<Post> findAllByLessThanIdAndInMemberIdsAndOrderByIdDesc(Long id, List<Long> memberIds, int size) {
+        if (memberIds.isEmpty()) {
+            return List.of();
+        }
+        var sql = String.format("""
+                SELECT *
+                  FROM %s
+                 WHERE memberId in (:memberIds)
+                   AND id < :id
+              ORDER BY id DESC
+                 LIMIT :size
+                """, TABLE);
+        var params = new MapSqlParameterSource()
+                .addValue("memberIds", memberIds)
+                .addValue("size", size)
+                .addValue("id", id);
+        //커서방식에는 사용하는 키와 정렬 순서가 반드시 맞아야한다?
+        return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
 }
