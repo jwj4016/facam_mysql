@@ -111,7 +111,7 @@ public class PostRepository {
                 .addValue("offset", pageable.getOffset());
 
         var posts = namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
-        return new PageImpl(posts, pageable, getCount(memberId));
+        return new PageImpl<>(posts, pageable, getCount(memberId));
     }
 
     private Long getCount(Long memberId) {
@@ -191,6 +191,20 @@ public class PostRepository {
                 .addValue("size", size)
                 .addValue("id", id);
         //커서방식에는 사용하는 키와 정렬 순서가 반드시 맞아야한다?
+        return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
+    public List<Post> findAllByInId(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        var sql = String.format("""
+                SELECT *
+                FROM %s
+                WHERE id IN (:ids)
+                """, TABLE);
+        var params = new MapSqlParameterSource()
+                .addValue("ids", ids);
         return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
     }
 
