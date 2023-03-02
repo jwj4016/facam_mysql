@@ -7,6 +7,7 @@ import com.example.fastcampusmysql.domain.member.repository.MemberNicknameHistor
 import com.example.fastcampusmysql.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -14,6 +15,7 @@ public class MemberWriteService {
     final private MemberRepository memberRepository;
     final private MemberNicknameHistoryRepository memberNicknameHistoryRepository;
 
+    @Transactional
     public Member register(RegisterMemberCommand command) {
 
         /*
@@ -29,9 +31,32 @@ public class MemberWriteService {
                 .build();
 
         var savedMember = memberRepository.save(member);
+        //트랜잭션 확인을 위해 에러 발생시키는 코드 추가
+        //var zero = 0 / 0;
+
         saveMemberNicknameHistory(savedMember);
         return savedMember;
     }
+    /*
+    아래와 같은 방식으로 코드 작성 후 register 메소드에서 아래 메소드 호출 시 트랜잭션 안먹는다.
+    프록시 방식으로 호출하기 때문.
+    @Transactional
+    Member getMember(RegisterMemberCommand command) {
+        var member = Member.builder()
+                .nickname(command.nickname())
+                .email(command.email())
+                .birthday(command.birthday())
+                .build();
+
+        var savedMember = memberRepository.save(member);
+        //트랜잭션 확인을 위해 에러 발생시키는 코드 추가
+        //var zero = 0 / 0;
+
+        saveMemberNicknameHistory(savedMember);
+        return savedMember;
+    }
+
+    */
 
     public void changeNickname(Long memberId, String nickname) {
         /*
