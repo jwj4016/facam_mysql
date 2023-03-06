@@ -20,6 +20,7 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Repository
@@ -34,6 +35,7 @@ public class PostRepository {
             .contents(resultSet.getString("contents"))
             .createdDate(resultSet.getObject("createdDate", LocalDate.class))
             .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
+            .likeCount(resultSet.getLong("likeCount"))
             .build();
 
     final static private RowMapper<DailyPostCount> DAILY_POST_COUNT_MAPPER = (ResultSet rs, int rowNum) -> new DailyPostCount(
@@ -49,7 +51,8 @@ public class PostRepository {
             return insert(post);
         }
         //가정은 항상 코드에서 체크해주기!!
-        throw new UnsupportedOperationException("Post는 갱신을 지원하지 않습니다.");
+        //throw new UnsupportedOperationException("Post는 갱신을 지원하지 않습니다.");
+        return update(post);
     }
 
     //배치같은 경우 jpa를 사용하고 있음에도, jdbc 템플릿을 많이 활용한다. jap의 경우 한 row 씩 insert한다.
@@ -206,6 +209,34 @@ public class PostRepository {
         var params = new MapSqlParameterSource()
                 .addValue("ids", ids);
         return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
+    public Optional<Post> findById(Long postId, Boolean requiredLock) {
+        var sql = String.format("""
+                SELECT * FROM %s WHERE id = :postId
+                """, TABLE);
+        if (requiredLock) {
+            sql += "FOR UPDATE";
+        }
+        var params = new MapSqlParameterSource().addValue("postId",postId);
+        var nullablePost = namedParameterJdbcTemplate.queryForObject(sql, params, ROW_MAPPER);
+        return Optional.ofNullable(nullablePost);
+    }
+
+    private Post update(Post post) {
+        var sql = String.format("""
+                UPDATE %s SET
+                    memberId = :memberId
+                  , contents = :contents
+                  , createdDate = :createdDate
+                  , likeCount = :likeCount
+                  , createdAt = :createdAt
+                WHERE id = :id
+                """, TABLE);
+        var params = new BeanPropertySqlParameterSource(post);
+        namedParameterJdbcTemplate.update(sql, params);
+        return post;
+
     }
 
 }
