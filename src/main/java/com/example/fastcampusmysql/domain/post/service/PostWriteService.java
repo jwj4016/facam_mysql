@@ -29,4 +29,14 @@ public class PostWriteService {
         post.incrementLikeCount();
         postRepository.save(post);
     }
+
+    //트랜잭션 안걸림. 락도 안걸림. 성능도 더 좋아!
+    //정합성이 중요한 경우 비관적 락과 낙관적 락을 동시에 사용한다.
+    //정합성이 중요한 경우 옵티미스틱락킹 어노테이션을 엔티티에 추가해서 옵티미스틱 라킹 구현 가능.
+    //분산 환경에서느 비관적 락을 위의 likePost처럼 간단하게 쓸 수 없다.
+    public void likePostByOptimisticLock(long postId) {
+        var post = postRepository.findById(postId, false).orElseThrow();
+        post.incrementLikeCount();
+        postRepository.save(post);
+    }
 }
